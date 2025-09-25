@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard — Sterling Reserve Bank</title>
+
+  <!-- Fonts & Tailwind (kept as you allowed CDN) -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js (unchanged) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Lucide icons (unchanged) -->
+  <script src="https://unpkg.com/lucide@0.244.0/dist/umd/lucide.min.js"></script>
+
+  <style>
+    :root{
+      --accent: #1fb6ff;
+      --navy: #04182a;
+      --glass: rgba(255,255,255,0.06);
+      --muted: rgba(241,245,249,0.86);
+      --danger: #dc2626;
+    }
+    html,body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+
+    /* Page background: more subtle, keeps your blue brand */
+    body {
+      min-height:100vh;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent),
+                  linear-gradient(180deg,#05223b 0%, #08355a 40%, #0b6aa0 100%);
+      color: #E6F0FB;
+      -webkit-font-smoothing:antialiased;
+      margin:0;
+    }
+
+    /* Skip to content (accessibility) */
+    a.skip-link {
+      position: absolute; left: -999px; top: auto; width: 1px; height: 1px; overflow: hidden;
+    }
+    a.skip-link:focus {
+      left: 1rem; top: 1rem; width: auto; height: auto; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.06); color: white; border-radius:6px; z-index:60;
+    }
+
+    /* Glass card - refined */
+    .glass-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 18px 60px rgba(2,10,23,0.45);
+    }
+
+    .tile-hover { transition: transform .22s cubic-bezier(.2,.9,.2,1), box-shadow .22s; }
+    .tile-hover:hover, .tile-hover:focus { transform: translateY(-6px); box-shadow: 0 24px 60px rgba(2,12,32,0.28); outline: none; }
+
+    .card-3d { transition: transform .28s cubic-bezier(.2,.9,.2,1); transform-origin: center; }
+    .card-3d:hover, .card-3d:focus-within { transform: perspective(900px) rotateX(3.5deg) rotateY(-4.5deg) translateY(-6px); }
+
+    .badge-glow { box-shadow: 0 12px 36px rgba(220,38,38,0.14); }
+
+    /* Scroll styling (nice but subtle) */
+    .nice-scroll::-webkit-scrollbar { width:8px; height:8px; }
+    .nice-scroll::-webkit-scrollbar-thumb { background: rgba(4,32,56,0.12); border-radius:8px; }
+
+    /* Menu (hamburger) */
+    .hamburger {
+      display: inline-flex; align-items:center; justify-content:center; width:44px; height:44px;
+      border-radius:10px; background: rgba(255,255,255,0.04); color: white;
+      transition: transform .12s, background-color .12s;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .hamburger:active { transform: scale(.98); }
+    .hamburger:focus { outline: 3px solid rgba(31,182,255,0.18); }
+
+    /* Suspension notification (improved accessibility & behavior) */
+    #suspensionNotification {
+      position: fixed; top: 20px; right: 20px;
+      background: linear-gradient(180deg,var(--danger),#a72a2a); color: white;
+      padding: 0.85rem 1.2rem; border-radius: 0.75rem;
+      box-shadow: 0 18px 48px rgba(2,6,23,0.45);
+      display: none; z-index: 60;
+      max-width: 360px;
+      font-size: 0.95rem;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    #suspensionNotification p { margin:0; font-size:0.95rem; line-height:1.25; }
+
+    /* Eye toggle accessible */
+    .eye-toggle { cursor:pointer; margin-left: 0.5rem; color: #f1f5f9; display:inline-flex; align-items:center; }
+    .eye-toggle:focus { outline: 3px solid rgba(31,182,255,0.18); border-radius:6px; }
+
+    /* Responsive tweaks for the sidebar width when open on mobile */
+    @media (max-width:767px) {
+      aside#sidebar { width: 86%; max-width:420px; }
+    }
+  </style>
+</head>
+<body class="flex flex-col">
+
+  <!-- Accessibility: skip to main -->
+  <a href="#mainContent" class="skip-link">Skip to main content</a>
+
+  <!-- Suspension Notification (aria-live) -->
+  <div id="suspensionNotification" role="status" aria-live="polite" aria-atomic="true" tabindex="-1">
+    <div class="flex items-start gap-3">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M5.07 19h13.86c.63 0 1.04-.68.82-1.28L13.82 4.72c-.23-.6-.96-.6-1.19 0L4.25 17.72c-.22.6.19 1.28.82 1.28z" />
+      </svg>
+      <div>
+        <p id="suspensionMessage">Your account has been temporarily restricted due to security reasons. Check support for next steps.</p>
+        <div class="mt-2 flex gap-2">
+          <!-- Preserve original links and keep actions unchanged -->
+          <a href="support_chat.html" class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/8 text-white text-sm font-semibold hover:bg-white/12 transition">Open support</a>
+          <button id="dismissSuspension" class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/6 text-white text-sm font-medium hover:bg-white/12 transition">Dismiss</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-blue-800 to-blue-900 text-white p-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 shadow-2xl" aria-label="Primary">
+    <div class="mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-[#0f5a88] to-[#04182a] flex items-center justify-center font-black text-white shadow-lg overflow-hidden">
+          <!-- keep your logo element intact -->
+          <img src="logo.png" alt="Logo" class="w-full h-full object-cover">
+        </div>
+        <div>
+          <div class="text-lg font-extrabold">Sterling Reserve Bank</div>
+          <div class="text-xs text-sky-100/80">Secure banking — guaranteed</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="mt-6 space-y-2" role="navigation" aria-label="Sidebar navigation">
+      <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 focus:bg-white/6 transition tile-hover" role="link">
+        <i data-lucide="home" class="w-5 h-5" aria-hidden="true"></i>
+        <span class="font-medium">Home</span>
+      </a>
+      <a href="signup.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 focus:bg-white/6 transition tile-hover">
+        <i data-lucide="credit-card" class="w-5 h-5" aria-hidden="true"></i>
+        <span class="font-medium">Fund Wallet</span>
+      </a>
+      <a href="signup.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 focus:bg-white/6 transition tile-hover">
+        <i data-lucide="arrow-down-circle" class="w-5 h-5" aria-hidden="true"></i>
+        <span class="font-medium">Withdraw</span>
+      </a>
+      <a href="signup.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 focus:bg-white/6 transition tile-hover">
+        <i data-lucide="bitcoin" class="w-5 h-5" aria-hidden="true"></i>
+        <span class="font-medium">Buy Crypto</span>
+      </a>
+      <a href="signup.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 focus:bg-white/6 transition tile-hover">
+        <i data-lucide="smartphone" class="w-5 h-5" aria-hidden="true"></i>
+        <span class="font-medium">Airtime & Data</span>
+      </a>
+      <a href="signup.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 focus:bg-white/6 transition tile-hover">
+        <i data-lucide="send" class="w-5 h-5" aria-hidden="true"></i>
+        <span class="font-medium">Wire Transfer</span>
+      </a>
+      <a href="support_chat.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 focus:bg-white/6 transition tile-hover">
+        <i data-lucide="headphones" class="w-5 h-5" aria-hidden="true"></i>
+        <span class="font-medium">Customer Service</span>
+      </a>
+      <a href="login.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-600/70 transition" role="button">
+        <i data-lucide="log-out" class="w-5 h-5"></i>
+        <span class="font-medium">Sign out</span>
+      </a>
+    </nav>
+
+    <div class="mt-auto text-xs text-sky-100/80" role="contentinfo">
+      <div>DR. Jennifer Sarah Albert</div>
+      <div class="mt-2 text-[0.78rem] font-medium"> STATUS : <span class="text-red-300 ml-1">SUSPENDED</span></div>
+    </div>
+  </aside>
+
+  <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-30 md:hidden" aria-hidden="true"></div>
+
+  <!-- Main content -->
+  <main id="mainContent" class="flex-1 md:ml-72 p-6" tabindex="-1">
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-4">
+        <button id="menuBtn" class="hamburger" aria-controls="sidebar" aria-expanded="false" aria-label="Open menu">
+          <i data-lucide="menu" class="w-5 h-5" aria-hidden="true"></i>
+        </button>
+        <div>
+          <div class="text-white text-lg font-semibold" id="userName" aria-live="polite">Welcome back,</div>
+          <div class="text-sm text-sky-100/80"> Dr. Jennifer Albert 👋</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="hidden sm:inline-block">
+          <button class="px-3 py-1 rounded-full bg-white/6 text-white font-semibold" aria-pressed="false">Rewards 1,240</button>
+        </div>
+        <img src="user.png" alt="User avatar" class="w-12 h-12 rounded-full border-2 border-white shadow-lg">
+      </div>
+    </div>
+
+    <!-- Virtual debit card with eye toggle -->
+    <section class="mx-auto max-w-3xl mb-8">
+      <div class="card-3d rounded-2xl p-6 glass-card relative overflow-hidden focus-within:ring-4 focus-within:ring-sky-300">
+        <div class="flex justify-between items-center mb-4">
+          <img src="https://img.icons8.com/ios-filled/50/ffffff/sim-card-chip.png" class="w-12" alt="chip">
+          <span class="text-xs text-sky-100/90 font-semibold">MASTERCARD</span>
+        </div>
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <div class="text-4xl font-extrabold text-white" id="walletBalance" aria-live="polite" aria-atomic="true" title="Wallet balance">$46,542.09</div>
+              <button id="toggleBalance" class="eye-toggle" aria-pressed="false" aria-label="Toggle balance visibility" title="Toggle balance visibility">
+                <!-- inline SVG to keep behavior intact -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path id="eyePath" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path id="eyeSlash" stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="text-sm tracking-wider text-sky-100/90 mt-2">**** **** **** 4352</div>
+          </div>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Mastercard-logo.png" class="w-16 h-auto" alt="mastercard">
+        </div>
+        <div class="mt-6 flex items-center justify-between text-sky-100/90">
+          <div class="uppercase font-semibold" id="cardName">Dr. Jennifer Albert</div>
+          <div class="text-xs">Valid Thru 09/30</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick action tiles -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10" aria-label="Quick actions">
+        <a href="signup.html" class="group rounded-2xl p-5 tile-hover shadow-lg bg-gradient-to-br from-sky-500 to-blue-700 text-white" role="button">
+            <div class="flex justify-center"><i data-lucide="send" class="w-10 h-10"></i></div>
+            <div class="mt-4 text-center">
+              <div class="font-semibold">Wire Transfer</div>
+              <div class="text-xs opacity-80 mt-1">Send Funds</div>
+            </div>
+          </a>
+      <a href="signup.html" class="group rounded-2xl p-5 tile-hover shadow-lg bg-gradient-to-br from-sky-500 to-blue-700 text-white" role="button">
+        <div class="flex justify-center"><i data-lucide="credit-card" class="w-10 h-10"></i></div>
+        <div class="mt-4 text-center">
+          <div class="font-semibold">Fund Wallet</div>
+          <div class="text-xs opacity-80 mt-1">Top up instantly</div>
+        </div>
+      </a>
+      <a href="signup.html" class="group rounded-2xl p-5 tile-hover shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white" role="button">
+        <div class="flex justify-center"><i data-lucide="arrow-down-circle" class="w-10 h-10"></i></div>
+        <div class="mt-4 text-center">
+          <div class="font-semibold">Withdraw</div>
+          <div class="text-xs opacity-80 mt-1">Secure cash-out</div>
+        </div>
+      </a>
+      <a href="signup.html" class="group rounded-2xl p-5 tile-hover shadow-lg bg-gradient-to-br from-sky-500 to-blue-700 text-white" role="button">
+        <div class="flex justify-center"><i data-lucide="bitcoin" class="w-10 h-10"></i></div>
+        <div class="mt-4 text-center">
+          <div class="font-semibold">Buy Bitcoin</div>
+          <div class="text-xs opacity-80 mt-1">Convert to crypto</div>
+        </div>
+      </a>
+    </section>
+
+    <section class="max-w-3xl mx-auto mb-10">
+      <div class="glass-card rounded-xl p-6 shadow-lg flex flex-col justify-between">
+        <div>
+          <div class="text-sm font-semibold mb-3">Account Status</div>
+          <span class="inline-block px-3 py-1 rounded-full bg-red-600 text-white text-sm font-bold badge-glow" role="status" aria-label="Account suspended">Suspended</span>
+          <div class="mt-6 text-sm text-sky-100/80">
+            <p>For assistance, open support chat — use the <strong>Customer Service</strong> option in the sidebar or the <em>Open support</em> button in the alert.</p>
+          </div>
+        </div>
+        <div class="mt-6">
+          <a href="signup.html" class="inline-block w-full text-center px-4 py-2 rounded-lg bg-white text-blue-800 font-semibold hover:opacity-95 transition">View History</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Transactions -->
+    <section class="glass-card rounded-xl p-6 shadow-lg mb-10 max-w-3xl mx-auto" aria-labelledby="recentTx">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-sm font-semibold" id="recentTx">Recent Transactions</div>
+        <a href="signup.html" class="text-sm text-sky-200/90 font-semibold">See all</a>
+      </div>
+      <ul class="space-y-3 max-h-64 overflow-auto nice-scroll" aria-live="polite">
+        <li class="flex justify-between items-center p-3 rounded-lg bg-white/6">
+          <div>
+            <div class="font-medium">Apartment Dues</div>
+            <div class="text-xs text-sky-100/80">Sep 13 • 11:20</div>
+          </div>
+          <div class="text-red-400 font-bold">- $5,000.00</div>
+        </li>
+        <li class="flex justify-between items-center p-3 rounded-lg bg-white/6">
+          <div>
+            <div class="font-medium">W.H.O Bonuses Credit</div>
+            <div class="text-xs text-sky-100/80">Sep 11 • 19:02</div>
+          </div>
+          <div class="text-emerald-400 font-bold">+ $4,650.00</div>
+        </li>
+        <li class="flex justify-between items-center p-3 rounded-lg bg-white/6">
+          <div>
+            <div class="font-medium">W.H.O Salary Credit</div>
+            <div class="text-xs text-sky-100/80">Sep 11 • 14:22</div>
+          </div>
+          <div class="text-green-400 font-bold">+ $19,000.00</div>
+        </li>
+        <li class="flex justify-between items-center p-3 rounded-lg bg-white/6">
+          <div>
+            <div class="font-medium">Electricity BILL</div>
+            <div class="text-xs text-sky-100/80">Sep 02 • 16:05</div>
+          </div>
+          <div class="text-red-400 font-bold">- $2,400.87</div>
+        </li>
+        <li class="flex justify-between items-center p-3 rounded-lg bg-white/6">
+          <div>
+            <div class="font-medium">W.H.O Bonuses Credit</div>
+            <div class="text-xs text-sky-100/80">Sep 01 • 08:00</div>
+          </div>
+          <div class="text-emerald-400 font-bold">+ $3,450.47</div>
+        </li>
+      </ul>
+    </section>
+
+    <footer class="text-center text-sky-100/80 text-sm mt-8">
+      &copy; 2010 Sterling Reserve Bank — Secure banking Guaranteed
+    </footer>
+
+  </main>
+
+  <!-- Scripts: preserved behavior + small non-breaking accessibility improvements -->
+  <script>
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    // Sidebar toggle (preserve behavior; enhance aria-expanded)
+    const btn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openSidebar() { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); btn.setAttribute('aria-expanded','true'); }
+    function closeSidebar() { if(window.innerWidth<768){ sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); btn.setAttribute('aria-expanded','false'); } }
+
+    if(window.innerWidth<768) sidebar.classList.add('-translate-x-full');
+
+    btn.addEventListener('click',()=>{ 
+      sidebar.classList.toggle('-translate-x-full'); 
+      overlay.classList.toggle('hidden'); 
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+    });
+    overlay.addEventListener('click', closeSidebar);
+    window.addEventListener('resize',()=>{ 
+      if(window.innerWidth>=768){ sidebar.classList.remove('-translate-x-full'); overlay.classList.add('hidden'); btn.setAttribute('aria-expanded','true'); } 
+      else { sidebar.classList.add('-translate-x-full'); btn.setAttribute('aria-expanded','false'); } 
+    });
+
+    // Wallet balance count-up (preserved)
+    let balance = 187311.41;
+    const balanceElem = document.getElementById('walletBalance');
+    let currentBalance = 0;
+    const step = balance / 30;
+    const interval = setInterval(() => {
+      currentBalance += step;
+      if(currentBalance >= balance){
+        currentBalance = balance;
+        clearInterval(interval);
+      }
+      balanceElem.textContent = '$' + currentBalance.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+    }, 15);
+
+    // Eye toggle functionality (preserved; changed from <svg> click to button click)
+    const toggle = document.getElementById('toggleBalance');
+    let visible = true;
+    toggle.addEventListener('click', ()=> {
+      visible = !visible;
+      toggle.setAttribute('aria-pressed', visible ? 'false' : 'true');
+      if(visible){
+        balanceElem.textContent = '$' + balance.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+      } else {
+        balanceElem.textContent = '****';
+      }
+    });
+
+    // Suspension notification (preserved auto-show, improved dismiss)
+    const suspensionNotification = document.getElementById('suspensionNotification');
+    const dismissBtn = document.getElementById('dismissSuspension');
+    window.addEventListener('load', () => {
+      // show with focus for screen-readers
+      suspensionNotification.style.display = 'block';
+      suspensionNotification.focus();
+      setTimeout(() => {
+        // auto-hide after 8s unless dismissed first
+        if(suspensionNotification.style.display !== 'none') suspensionNotification.style.display = 'none';
+      }, 8000);
+    });
+    dismissBtn && dismissBtn.addEventListener('click', ()=> {
+      suspensionNotification.style.display = 'none';
+    });
+
+    // Allow ESC to close the notification and the sidebar (small added UX)
+    window.addEventListener('keydown', (e)=> {
+      if(e.key === 'Escape'){
+        // hide notification if visible
+        if(suspensionNotification && suspensionNotification.style.display !== 'none') {
+          suspensionNotification.style.display = 'none';
+        }
+        // close sidebar on mobile
+        if(window.innerWidth < 768 && !sidebar.classList.contains('-translate-x-full')) {
+          sidebar.classList.add('-translate-x-full');
+          overlay.classList.add('hidden');
+          btn.setAttribute('aria-expanded','false');
+        }
+      }
+    });
+
+  </script>
+</body>
+</html>

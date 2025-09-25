@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign in — Sterling Reserve Bank</title>
+
+  <!-- External: Inter font, Tailwind, FontAwesome -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    :root{ --accent:#1fb6ff; --navy:#04182a; }
+    body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial; background: linear-gradient(180deg,#eaf6ff 0%, #f3f9ff 40%, #ffffff 100%); }
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 18px 60px rgba(4,32,56,0.10);
+    }
+    .hero-illustration {
+      background-image: url('https://img.freepik.com/free-vector/banking-app-interface-concept_23-2148616879.jpg?w=1060');
+      background-size: cover;
+      background-position: center;
+      border-radius: 18px;
+      min-height: 340px;
+      box-shadow: 0 20px 50px rgba(4,32,56,0.12);
+    }
+    input:focus { outline: none; box-shadow: 0 6px 24px rgba(31,182,255,0.12); border-color: rgba(31,182,255,0.6); }
+    .btn-primary {
+      background: linear-gradient(90deg, var(--accent), #0fa0e0);
+      color: #042033;
+      font-weight: 800;
+      padding: .75rem 1.2rem;
+      border-radius: 12px;
+      box-shadow: 0 12px 34px rgba(31,182,255,0.12);
+    }
+    .small-note { font-size: .88rem; color: #6b7a8a; }
+    @media (max-width:720px) {
+      .hero-illustration { min-height: 220px; border-radius:14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="min-h-screen flex items-center justify-center px-4 py-8">
+    <div class="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+
+      <!-- LEFT: Sign-in card -->
+      <div class="bg-white rounded-2xl shadow-elev p-8 glass">
+        <div class="mb-6">
+          <div class="text-sky-600 font-extrabold text-xl">Sterling Reserve Bank</div>
+          <h1 class="text-2xl md:text-3xl font-extrabold mt-3 text-slate-900">We need your details to verify it's you...</h1>
+          <p class="small-note mt-1">Secure Access Protocol</p>
+        </div>
+
+        <!-- Error placeholder -->
+        <div id="errorBox" class="hidden mb-4 p-3 rounded-lg bg-red-50 text-red-700 border border-red-100"></div>
+
+        <!-- Static login form -->
+        <form id="loginForm" class="space-y-4" aria-label="Sign in form">
+          <div>
+            <label for="email" class="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+            <input id="email" type="email" required placeholder="you@company.com"
+                   class="w-full rounded-lg border border-slate-200 px-4 py-3" />
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-semibold text-slate-700 mb-1">Password</label>
+            <input id="password" type="password" required placeholder="••••••••"
+                   class="w-full rounded-lg border border-slate-200 px-4 py-3" />
+          </div>
+
+          <div class="mt-6 text-center small-note">
+            Back? <a href="index.html" class="text-sky-600 font-semibold hover:underline">Return to Homepage</a>
+          </div>
+
+          <div>
+            <button type="submit" class="btn-primary w-full rounded-lg">Sign in</button>
+          </div>
+        </form>
+
+        <div class="mt-6 border-t border-slate-100 pt-4 small-note text-center">
+          By signing in you agree to our <a href="signup.html" class="text-sky-600 hover:underline">Terms</a> and <a href="signup.html" class="text-sky-600 hover:underline">Privacy Policy</a>.
+        </div>
+      </div>
+
+      <!-- RIGHT: Visual / Brand illustration -->
+      <div class="hero-illustration hidden md:block"></div>
+
+      <!-- mobile fallback: small brand banner under card -->
+      <div class="md:hidden text-center text-sm small-note mt-2">
+        &copy; 2010 Sterling Reserve Bank — Secure banking Guaranteed
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fake login logic
+    const form = document.getElementById('loginForm');
+    const errorBox = document.getElementById('errorBox');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      // Demo credentials
+      const demoEmail = "jennifersarahalbert538@gmail.com";
+      const demoPassword = "PaquetaAlbert2021";
+
+      if (email === demoEmail && password === demoPassword) {
+        // redirect to dashboard
+        window.location.href = "dashboard.html";
+      } else {
+        errorBox.textContent = "Sorry Wrong Details , Check your credentials again ! .";
+        errorBox.classList.remove("hidden");
+      }
+    });
+  </script>
+</body>
+</html>
